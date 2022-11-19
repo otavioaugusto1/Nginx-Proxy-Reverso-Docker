@@ -1,0 +1,31 @@
+FROM php:7.4-cli AS builder
+
+WORKDIR /var/www
+
+RUN apt-get update && \
+    apt-get install libzip-dev -y && \
+    docker-php-ext-install zip
+
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php composer-setup.php && \
+    php -r "unlink('composer-setup.php');"
+
+RUN php composer.phar create-project --prefer-dist laravel/laravel laravel 
+
+#Multistage building
+
+FROM php:7.4-fpm-alpine
+
+WORKDIR /var/www
+RUN rm -rf /var/www/html
+
+# pego tudo que ele gerou do builder e jogo dentro do caminho /var/www
+COPY --from=builder /var/www/laravel .
+# crio um link simbólico
+RUN ln -s public html
+#troco de dono
+RUN chown -R www-data:www-data /var/www
+#libero a porta 9000
+EXPOSE 9000
+#executo o comando
+CMD ["php-fpm"]
