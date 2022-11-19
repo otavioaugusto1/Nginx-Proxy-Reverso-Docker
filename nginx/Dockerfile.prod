@@ -1,0 +1,9 @@
+FROM nginx:1.15.0-alpine
+
+# removo o .conf padrão do nginx
+RUN rm /etc/nginx/conf.d/default.conf
+# adiciono o conf.d criado manualmente para dentro do nginx.
+COPY nginx.conf /etc/nginx/conf.d
+
+# eu preciso criar um arquivo .php nem que seja vazio para o nginx não dar erro 404 quando iniciar.
+RUN mkdir /var/www/html -p && touch /var/www/html/index.php
